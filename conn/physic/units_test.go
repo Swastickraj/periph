@@ -84,8 +84,8 @@ func TestFrequency_String(t *testing.T) {
 	}
 }
 
-func TestFrequency_Duration(t *testing.T) {
-	if v := MegaHertz.Duration(); v != time.Microsecond {
+func TestFrequency_Period(t *testing.T) {
+	if v := MegaHertz.Period(); v != time.Microsecond {
 		t.Fatalf("%#v", v)
 	}
 }

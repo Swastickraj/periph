@@ -665,9 +665,8 @@ func (f *Frequency) Set(s string) error {
 	return nil
 }
 
-// Duration returns the duration of one cycle at this frequency.
-func (f Frequency) Duration() time.Duration {
-	// Note: Duration() should have been named Period().
+// Period returns the duration of one cycle at this frequency.
+func (f Frequency) Period() time.Duration {
 	// TODO(maruel): Rounding should be fine-tuned.
 	return time.Second * time.Duration(Hertz) / time.Duration(f)
 }
