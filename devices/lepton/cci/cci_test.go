@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2ctest"
 	"periph.io/x/periph/conn/mmr"
@@ -208,12 +209,12 @@ func TestGetTempHousing_fail(t *testing.T) {
 
 func TestSense(t *testing.T) {
 	bus, d := getDev(getOps([]byte{0x0, 0x4, 0x2, 0x10}, []byte{0, 0}))
-	e := physic.Env{}
-	if err := d.Sense(&e); err != nil {
+	w := environment.Weather{}
+	if err := d.Sense(&w); err != nil {
 		t.Fatal(err)
 	}
-	if e.Temperature != 0 {
-		t.Fatal(e)
+	if w.Temperature != 0 {
+		t.Fatal(w)
 	}
 	if err := bus.Close(); err != nil {
 		t.Fatal(err)
@@ -232,10 +233,10 @@ func TestSenseContinuous(t *testing.T) {
 
 func TestPrecision(t *testing.T) {
 	bus, d := getDev(nil)
-	e := physic.Env{}
-	d.Precision(&e)
-	if e.Temperature != 10*physic.MilliKelvin {
-		t.Fatal(e)
+	w := environment.Weather{}
+	d.Precision(&w)
+	if w.Temperature != 10*physic.MilliKelvin {
+		t.Fatal(w)
 	}
 	if err := bus.Close(); err != nil {
 		t.Fatal(err)

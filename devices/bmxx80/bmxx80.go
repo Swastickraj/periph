@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"periph.io/x/periph/conn"
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/mmr"
 	"periph.io/x/periph/conn/physic"
@@ -228,7 +229,7 @@ func (d *Dev) String() string {
 // Sense requests a one time measurement as °C, kPa and % of relative humidity.
 //
 // The very first measurements may be of poor quality.
-func (d *Dev) Sense(e *physic.Env) error {
+func (d *Dev) Sense(w *environment.Weather) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.stop != nil {
@@ -249,9 +250,9 @@ func (d *Dev) Sense(e *physic.Env) error {
 				return d.wrap(err)
 			}
 		}
-		return d.sense280(e)
+		return d.sense280(w)
 	}
-	return d.sense180(e)
+	return d.sense180(w)
 }
 
 // SenseContinuous returns measurements as °C, kPa and % of relative humidity
@@ -262,7 +263,7 @@ func (d *Dev) Sense(e *physic.Env) error {
 //
 // It's the responsibility of the caller to retrieve the values from the
 // channel as fast as possible, otherwise the interval may not be respected.
-func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error) {
+func (d *Dev) SenseContinuous(interval time.Duration) (<-chan environment.Weather, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.stop != nil {
@@ -285,7 +286,7 @@ func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error)
 		}
 	}
 
-	sensing := make(chan physic.Env)
+	sensing := make(chan environment.Weather)
 	d.stop = make(chan struct{})
 	d.wg.Add(1)
 	go func() {
@@ -296,18 +297,18 @@ func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error)
 	return sensing, nil
 }
 
-// Precision implements physic.SenseEnv.
-func (d *Dev) Precision(e *physic.Env) {
+// Precision implements environment.SenseWeather.
+func (d *Dev) Precision(w *environment.Weather) {
 	if d.is280 {
-		e.Temperature = 10 * physic.MilliKelvin
-		e.Pressure = 15625 * physic.MicroPascal / 4
+		w.Temperature = 10 * physic.MilliKelvin
+		w.Pressure = 15625 * physic.MicroPascal / 4
 	} else {
-		e.Temperature = 100 * physic.MilliKelvin
-		e.Pressure = physic.Pascal
+		w.Temperature = 100 * physic.MilliKelvin
+		w.Pressure = physic.Pascal
 	}
 
 	if d.isBME {
-		e.Humidity = 10000 / 1024 * physic.MicroRH
+		w.Humidity = 10000 / 1024 * physic.MicroRH
 	}
 }
 
@@ -428,19 +429,19 @@ func (d *Dev) makeDev(opts *Opts) error {
 	return nil
 }
 
-func (d *Dev) sensingContinuous(interval time.Duration, sensing chan<- physic.Env, stop <-chan struct{}) {
+func (d *Dev) sensingContinuous(interval time.Duration, sensing chan<- environment.Weather, stop <-chan struct{}) {
 	t := time.NewTicker(interval)
 	defer t.Stop()
 
 	var err error
 	for {
 		// Do one initial sensing right away.
-		e := physic.Env{}
+		w := environment.Weather{}
 		d.mu.Lock()
 		if d.is280 {
-			err = d.sense280(&e)
+			err = d.sense280(&w)
 		} else {
-			err = d.sense180(&e)
+			err = d.sense180(&w)
 		}
 		d.mu.Unlock()
 		if err != nil {
@@ -448,7 +449,7 @@ func (d *Dev) sensingContinuous(interval time.Duration, sensing chan<- physic.En
 			return
 		}
 		select {
-		case sensing <- e:
+		case sensing <- w:
 		case <-stop:
 			return
 		}
@@ -503,4 +504,4 @@ func (d *Dev) wrap(err error) error {
 var doSleep = time.Sleep
 
 var _ conn.Resource = &Dev{}
-var _ physic.SenseEnv = &Dev{}
+var _ environment.SenseWeather = &Dev{}

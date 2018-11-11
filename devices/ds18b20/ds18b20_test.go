@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/onewire"
 	"periph.io/x/periph/conn/onewire/onewiretest"
 	"periph.io/x/periph/conn/physic"
@@ -64,13 +65,13 @@ func TestSense(t *testing.T) {
 	var sleeps []time.Duration
 	sleep = func(d time.Duration) { sleeps = append(sleeps, d) }
 	defer func() { sleep = func(time.Duration) {} }()
-	e := physic.Env{}
-	if err := dev.Sense(&e); err != nil {
+	w := environment.Weather{}
+	if err := dev.Sense(&w); err != nil {
 		t.Fatal(err)
 	}
 	// Expect the correct value.
-	if expected := 30*physic.Celsius + physic.ZeroCelsius; e.Temperature != expected {
-		t.Errorf("expected %s, got %s", expected.String(), e.Temperature.String())
+	if expected := 30*physic.Celsius + physic.ZeroCelsius; w.Temperature != expected {
+		t.Errorf("expected %s, got %s", expected.String(), w.Temperature.String())
 	}
 	// Expect it to take >187ms
 	if !reflect.DeepEqual(sleeps, []time.Duration{188 * time.Millisecond}) {

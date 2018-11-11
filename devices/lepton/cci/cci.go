@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"periph.io/x/periph/conn"
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/mmr"
 	"periph.io/x/periph/conn/physic"
@@ -269,23 +270,24 @@ func (d *Dev) GetTempHousing() (physic.Temperature, error) {
 	return v.Temperature(), nil
 }
 
-// Sense implements physic.SenseEnv. It returns the housing temperature.
-func (d *Dev) Sense(e *physic.Env) error {
+// Sense implements environment.SenseWeather. It returns the housing
+// temperature.
+func (d *Dev) Sense(w *environment.Weather) error {
 	var err error
-	e.Temperature, err = d.GetTempHousing()
+	w.Temperature, err = d.GetTempHousing()
 	return err
 }
 
-// SenseContinuous implements physic.SenseEnv.
-func (d *Dev) SenseContinuous(time.Duration) (<-chan physic.Env, error) {
+// SenseContinuous implements environment.SenseWeather.
+func (d *Dev) SenseContinuous(time.Duration) (<-chan environment.Weather, error) {
 	// TODO(maruel): Manually poll in a loop via time.NewTicker, or better
 	// leverage the frames being read.
 	return nil, errors.New("cci: not implemented")
 }
 
-// Precision implements physic.SenseEnv.
-func (d *Dev) Precision(e *physic.Env) {
-	e.Temperature = 10 * physic.MilliKelvin
+// Precision implements environment.SenseWeather.
+func (d *Dev) Precision(w *environment.Weather) {
+	w.Temperature = 10 * physic.MilliKelvin
 }
 
 // GetFFCModeControl returns the internal state with regards to calibration.
@@ -570,4 +572,4 @@ const (
 var sleep = time.Sleep
 
 var _ conn.Resource = &Dev{}
-var _ physic.SenseEnv = &Dev{}
+var _ environment.SenseWeather = &Dev{}

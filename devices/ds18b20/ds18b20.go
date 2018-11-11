@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"periph.io/x/periph/conn"
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/onewire"
 	"periph.io/x/periph/conn/physic"
 )
@@ -90,8 +91,8 @@ func (d *Dev) Halt() error {
 	return nil
 }
 
-// Sense implements physic.SenseEnv.
-func (d *Dev) Sense(e *physic.Env) error {
+// Sense implements environment.SenseWeather.
+func (d *Dev) Sense(w *environment.Weather) error {
 	if err := d.onewire.TxPower([]byte{0x44}, nil); err != nil {
 		return err
 	}
@@ -100,19 +101,19 @@ func (d *Dev) Sense(e *physic.Env) error {
 	if err != nil {
 		return err
 	}
-	e.Temperature = t
+	w.Temperature = t
 	return nil
 }
 
-// SenseContinuous implements physic.SenseEnv.
-func (d *Dev) SenseContinuous(time.Duration) (<-chan physic.Env, error) {
+// SenseContinuous implements environment.SenseWeather.
+func (d *Dev) SenseContinuous(time.Duration) (<-chan environment.Weather, error) {
 	// TODO(maruel): Manually poll in a loop via time.NewTicker.
 	return nil, errors.New("ds18b20: not implemented")
 }
 
-// Precision implements physic.SenseEnv.
-func (d *Dev) Precision(e *physic.Env) {
-	e.Temperature = physic.Kelvin / 16
+// Precision implements environment.SenseWeather.
+func (d *Dev) Precision(w *environment.Weather) {
+	w.Temperature = physic.Kelvin / 16
 }
 
 // LastTemp reads the temperature resulting from the last conversion from the
@@ -183,4 +184,4 @@ func (d *Dev) readScratchpad() ([]byte, error) {
 var sleep = time.Sleep
 
 var _ conn.Resource = &Dev{}
-var _ physic.SenseEnv = &Dev{}
+var _ environment.SenseWeather = &Dev{}

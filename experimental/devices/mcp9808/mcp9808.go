@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"periph.io/x/periph/conn"
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/mmr"
 	"periph.io/x/periph/conn/physic"
@@ -78,9 +79,9 @@ type Dev struct {
 }
 
 // Sense reads the current temperature.
-func (d *Dev) Sense(e *physic.Env) error {
+func (d *Dev) Sense(w *environment.Weather) error {
 	t, _, err := d.readTemperature()
-	e.Temperature = t
+	w.Temperature = t
 	return err
 }
 
@@ -89,7 +90,7 @@ func (d *Dev) Sense(e *physic.Env) error {
 // sensor and close the channel.
 // It's the responsibility of the caller to retrieve the values from the channel
 // as fast as possible, otherwise the interval may not be respected.
-func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error) {
+func (d *Dev) SenseContinuous(interval time.Duration) (<-chan environment.Weather, error) {
 	switch d.res {
 	case Maximum:
 		if interval < 250*time.Millisecond {
@@ -109,7 +110,7 @@ func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error)
 		}
 	}
 
-	env := make(chan physic.Env)
+	env := make(chan environment.Weather)
 	d.mu.Lock()
 	d.sensing = true
 	d.mu.Unlock()
@@ -121,7 +122,7 @@ func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error)
 			select {
 			case <-time.After(interval):
 				t, _, _ := d.readTemperature()
-				env <- physic.Env{Temperature: t}
+				env <- environment.Weather{Temperature: t}
 			case <-d.stop:
 				wg.Done()
 				return
@@ -139,16 +140,16 @@ func (d *Dev) SenseContinuous(interval time.Duration) (<-chan physic.Env, error)
 	return env, nil
 }
 
-func (d *Dev) Precision(e *physic.Env) {
+func (d *Dev) Precision(w *environment.Weather) {
 	switch d.res {
 	case Maximum:
-		e.Temperature = 62500 * physic.MicroKelvin
+		w.Temperature = 62500 * physic.MicroKelvin
 	case High:
-		e.Temperature = 125 * physic.MilliKelvin
+		w.Temperature = 125 * physic.MilliKelvin
 	case Medium:
-		e.Temperature = 250 * physic.MilliKelvin
+		w.Temperature = 250 * physic.MilliKelvin
 	case Low:
-		e.Temperature = 500 * physic.MilliKelvin
+		w.Temperature = 500 * physic.MilliKelvin
 	}
 }
 
@@ -423,4 +424,4 @@ const (
 )
 
 var _ conn.Resource = &Dev{}
-var _ physic.SenseEnv = &Dev{}
+var _ environment.SenseWeather = &Dev{}

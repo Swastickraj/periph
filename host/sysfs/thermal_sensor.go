@@ -16,6 +16,7 @@ import (
 
 	"periph.io/x/periph"
 	"periph.io/x/periph/conn"
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/physic"
 )
 
@@ -95,8 +96,8 @@ func (t *ThermalSensor) readType() (string, error) {
 	return string(buf[:n-1]), nil
 }
 
-// Sense implements physic.SenseEnv.
-func (t *ThermalSensor) Sense(e *physic.Env) error {
+// Sense implements environment.SenseWeather.
+func (t *ThermalSensor) Sense(w *environment.Weather) error {
 	if err := t.open(); err != nil {
 		return err
 	}
@@ -120,26 +121,26 @@ func (t *ThermalSensor) Sense(e *physic.Env) error {
 			t.precision *= 1000
 		}
 	}
-	e.Temperature = physic.Temperature(i)*t.precision + physic.ZeroCelsius
+	w.Temperature = physic.Temperature(i)*t.precision + physic.ZeroCelsius
 	return nil
 }
 
-// SenseContinuous implements physic.SenseEnv.
-func (t *ThermalSensor) SenseContinuous(interval time.Duration) (<-chan physic.Env, error) {
+// SenseContinuous implements environment.SenseWeather.
+func (t *ThermalSensor) SenseContinuous(interval time.Duration) (<-chan environment.Weather, error) {
 	// TODO(maruel): Manually poll in a loop via time.NewTicker.
 	return nil, errors.New("sysfs-thermal: not implemented")
 }
 
-// Precision implements physic.SenseEnv.
-func (t *ThermalSensor) Precision(e *physic.Env) {
+// Precision implements environment.SenseWeather.
+func (t *ThermalSensor) Precision(w *environment.Weather) {
 	if t.precision == 0 {
-		dummy := physic.Env{}
+		dummy := environment.Weather{}
 		// Ignore the error.
 		_ = t.Sense(&dummy)
 	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	e.Temperature = t.precision
+	w.Temperature = t.precision
 }
 
 //
@@ -225,4 +226,4 @@ func init() {
 var drvThermalSensor driverThermalSensor
 
 var _ conn.Resource = &ThermalSensor{}
-var _ physic.SenseEnv = &ThermalSensor{}
+var _ environment.SenseWeather = &ThermalSensor{}

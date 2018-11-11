@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"time"
 
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
@@ -34,21 +35,21 @@ func printPin(fn string, p pin.Pin) {
 	}
 }
 
-func printEnv(e *physic.Env) {
-	if e.Humidity == 0 {
-		fmt.Printf("%8s %10s\n", e.Temperature, e.Pressure)
+func printWeather(w *environment.Weather) {
+	if w.Humidity == 0 {
+		fmt.Printf("%8s %10s\n", w.Temperature, w.Pressure)
 	} else {
-		fmt.Printf("%8s %10s %9s\n", e.Temperature, e.Pressure, e.Humidity)
+		fmt.Printf("%8s %10s %9s\n", w.Temperature, w.Pressure, w.Humidity)
 	}
 }
 
-func run(dev physic.SenseEnv, interval time.Duration) error {
+func run(dev environment.SenseWeather, interval time.Duration) error {
 	if interval == 0 {
-		e := physic.Env{}
-		if err := dev.Sense(&e); err != nil {
+		w := environment.Weather{}
+		if err := dev.Sense(&w); err != nil {
 			return err
 		}
-		printEnv(&e)
+		printWeather(&w)
 		return nil
 	}
 
@@ -62,8 +63,8 @@ func run(dev physic.SenseEnv, interval time.Duration) error {
 		select {
 		case <-chanSignal:
 			return nil
-		case e := <-c:
-			printEnv(&e)
+		case w := <-c:
+			printWeather(&w)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c/i2ctest"
 	"periph.io/x/periph/conn/physic"
 )
@@ -110,18 +111,18 @@ func TestSense180_success(t *testing.T) {
 		if s := dev.String(); s != "BMP180{playback(119)}" {
 			t.Fatal(s)
 		}
-		e := physic.Env{}
-		if err := dev.Sense(&e); err != nil {
+		w := environment.Weather{}
+		if err := dev.Sense(&w); err != nil {
 			t.Fatal(err)
 		}
-		if e.Temperature != 25300*physic.MilliCelsius+physic.ZeroCelsius {
-			t.Fatalf("temp %d", e.Temperature)
+		if w.Temperature != 25300*physic.MilliCelsius+physic.ZeroCelsius {
+			t.Fatalf("temp %d", w.Temperature)
 		}
-		if e.Pressure != line.p {
-			t.Fatalf("pressure %d", e.Pressure)
+		if w.Pressure != line.p {
+			t.Fatalf("pressure %d", w.Pressure)
 		}
-		if e.Humidity != 0 {
-			t.Fatalf("humidity %d", e.Humidity)
+		if w.Humidity != 0 {
+			t.Fatalf("humidity %d", w.Humidity)
 		}
 		if err := dev.Halt(); err != nil {
 			t.Fatal(err)
@@ -151,8 +152,8 @@ func TestSense180_fail_1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := physic.Env{}
-	if dev.Sense(&e) == nil {
+	w := environment.Weather{}
+	if dev.Sense(&w) == nil {
 		t.Fatal("sensing should have failed")
 	}
 	if err := bus.Close(); err != nil {
@@ -181,8 +182,8 @@ func TestSense180_fail_2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := physic.Env{}
-	if dev.Sense(&e) == nil {
+	w := environment.Weather{}
+	if dev.Sense(&w) == nil {
 		t.Fatal("sensing should have failed")
 	}
 	if err := bus.Close(); err != nil {
@@ -213,8 +214,8 @@ func TestSense180_fail_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := physic.Env{}
-	if dev.Sense(&e) == nil {
+	w := environment.Weather{}
+	if dev.Sense(&w) == nil {
 		t.Fatal("sensing should have failed")
 	}
 	if err := bus.Close(); err != nil {
@@ -247,8 +248,8 @@ func TestSense180_fail_4(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := physic.Env{}
-	if dev.Sense(&e) == nil {
+	w := environment.Weather{}
+	if dev.Sense(&w) == nil {
 		t.Fatal("sensing should have failed")
 	}
 	if err := bus.Close(); err != nil {
@@ -294,18 +295,18 @@ func TestSenseContinuous180_success(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := <-c
-	if e.Temperature != 25300*physic.MilliCelsius+physic.ZeroCelsius {
-		t.Fatalf("temp %d", e.Temperature)
+	w := <-c
+	if w.Temperature != 25300*physic.MilliCelsius+physic.ZeroCelsius {
+		t.Fatalf("temp %d", w.Temperature)
 	}
-	if e.Pressure != 100567*physic.Pascal {
-		t.Fatalf("pressure %d", e.Pressure)
+	if w.Pressure != 100567*physic.Pascal {
+		t.Fatalf("pressure %d", w.Pressure)
 	}
-	if e.Humidity != 0 {
-		t.Fatalf("humidity %d", e.Humidity)
+	if w.Humidity != 0 {
+		t.Fatalf("humidity %d", w.Humidity)
 	}
 
-	if dev.Sense(&e) == nil {
+	if dev.Sense(&w) == nil {
 		t.Fatal("Sense() should have failed")
 	}
 
@@ -314,7 +315,7 @@ func TestSenseContinuous180_success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	e = <-c2
+	w = <-c2
 
 	if _, ok := <-c; ok {
 		t.Fatal("c should be closed")
@@ -349,16 +350,16 @@ func TestBmp180Precision(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := physic.Env{}
-	dev.Precision(&e)
-	if e.Temperature != 100*physic.MilliKelvin {
-		t.Fatal(e.Temperature)
+	w := environment.Weather{}
+	dev.Precision(&w)
+	if w.Temperature != 100*physic.MilliKelvin {
+		t.Fatal(w.Temperature)
 	}
-	if e.Pressure != physic.Pascal {
-		t.Fatal(e.Pressure)
+	if w.Pressure != physic.Pascal {
+		t.Fatal(w.Pressure)
 	}
-	if e.Humidity != 0 {
-		t.Fatal(e.Humidity)
+	if w.Humidity != 0 {
+		t.Fatal(w.Humidity)
 	}
 	if err := bus.Close(); err != nil {
 		t.Fatal(err)

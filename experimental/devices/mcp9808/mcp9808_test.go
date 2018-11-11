@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"periph.io/x/periph/conn/environment"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2ctest"
 	"periph.io/x/periph/conn/mmr"
@@ -125,10 +126,10 @@ func TestSense(t *testing.T) {
 				Order: binary.BigEndian},
 			enabled: tt.enabled,
 		}
-		e := &physic.Env{}
-		err := mcp9808.Sense(e)
-		if err == nil && tt.want != e.Temperature {
-			t.Errorf("%s Sense() expected %v but got %v ", tt.name, tt.want, e.Temperature)
+		w := &environment.Weather{}
+		err := mcp9808.Sense(w)
+		if err == nil && tt.want != w.Temperature {
+			t.Errorf("%s Sense() expected %v but got %v ", tt.name, tt.want, w.Temperature)
 		}
 		if err != tt.err {
 			t.Errorf("%s Sense() expected %v but got %v ", tt.name, tt.err, err)
@@ -203,13 +204,13 @@ func TestSenseContinuous(t *testing.T) {
 		env, err := mcp9808.SenseContinuous(tt.interval)
 
 		if tt.Halt {
-			e := <-env
+			w := <-env
 			err := mcp9808.Halt()
 			if err != tt.err {
 				t.Errorf("SenseContinuous() %s wanted err: %v, but got: %v", tt.name, tt.err, err)
 			}
-			if err == nil && e.Temperature != tt.want {
-				t.Errorf("SenseContinuous() %s wanted %v, but got: %v", tt.name, tt.want, e.Temperature)
+			if err == nil && w.Temperature != tt.want {
+				t.Errorf("SenseContinuous() %s wanted %v, but got: %v", tt.name, tt.want, w.Temperature)
 			}
 		}
 
@@ -250,10 +251,10 @@ func TestPrecision(t *testing.T) {
 
 	for _, tt := range tests {
 		d := &Dev{res: tt.res}
-		e := &physic.Env{}
-		d.Precision(e)
-		if e.Temperature != tt.want {
-			t.Errorf("Precision(%s) wanted %v but got %v", tt.name, tt.want, e.Temperature)
+		w := &environment.Weather{}
+		d.Precision(w)
+		if w.Temperature != tt.want {
+			t.Errorf("Precision(%s) wanted %v but got %v", tt.name, tt.want, w.Temperature)
 		}
 	}
 }
